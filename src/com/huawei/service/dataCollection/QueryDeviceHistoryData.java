@@ -68,13 +68,13 @@ public class QueryDeviceHistoryData {
 
             // 获取现在时间
             Date date=new Date();
+            // 现在时间转化为YYMMddHHmm的数字
             SimpleDateFormat dateFormat=new SimpleDateFormat("YYMMddHHmm");
             int nowTimeR = Integer.parseInt(dateFormat.format(date));
-            // 处理时间格式
+            // 该数据写入时间，与现在时间对比用
             DateFormat fmt =new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
-
-//        System.out.println(deviceDataList.get(0).get("timestamp"));
-//        System.out.println(dateFormat.format(fmt.parse(String.valueOf(deviceDataList.get(0).get("timestamp")))));
+            // 该浓度数据具体的时刻
+            DateFormat newFmt = new SimpleDateFormat("yyMMddHHmm");
 
             fmt.setTimeZone(TimeZone.getTimeZone("UTC"));
             for(Map item:deviceDataList){
@@ -82,9 +82,9 @@ public class QueryDeviceHistoryData {
                 // 只取最近一小时的数据
                 if(nowTimeR - dataTimeR > 0 && nowTimeR - dataTimeR < 60) {
                     DeviceNewData addItem = new DeviceNewData();
-                    addItem.setTimePoint(fmt.parse(String.valueOf(item.get("timestamp"))));
                     addItem.setDeviceId(String.valueOf(item.get("deviceId")));
                     Map<String, Double> dataItem = JSON.parseObject(String.valueOf(item.get("data")), Map.class);
+                    addItem.setTimePoint(newFmt.parse(String.valueOf(dataItem.get("TIME_R")).substring(0, 10)));
                     addItem.setTemp(Double.valueOf(String.valueOf(dataItem.get("TEMP"))));
                     addItem.setPm25(Double.valueOf(String.valueOf(dataItem.get("PM25"))));
                     addItem.setRH(Double.valueOf(String.valueOf(dataItem.get("RH"))));
@@ -93,7 +93,7 @@ public class QueryDeviceHistoryData {
                 }
             }
 //            System.out.println(dataToStore.size());
-            // 存入数据库，这里以第1个数据测试为例
+            // 存入数据库
             if(dataToStore.size() > 0) {
                 DatabaseOperation.insertDeviceNewData(dataToStore);
             }
